@@ -1,8 +1,8 @@
 """
-Custom integration to integrate integration_blueprint with Home Assistant.
+Custom integration to integrate HANBD with Home Assistant.
 
 For more details about this integration, please refer to
-https://github.com/ludeeus/integration_blueprint
+https://github.com/elrobertocarlos/hanbd
 """
 
 from __future__ import annotations
@@ -10,44 +10,48 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import aiohttp
+from homeassistant.const import CONF_PASSWORD, Platform
 from homeassistant.loader import async_get_loaded_integration
 
-from .api import IntegrationBlueprintApiClient
+from .api import HanbdApiClient
+from .config_flow import CONF_PHONE
 from .const import DOMAIN, LOGGER
-from .coordinator import BlueprintDataUpdateCoordinator
-from .data import IntegrationBlueprintData
+from .coordinator import HanbdDataUpdateCoordinator
+from .data import HanbdData
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
-    from .data import IntegrationBlueprintConfigEntry
+    from .data import HanbdConfigEntry
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
-    Platform.SWITCH,
+    Platform.BUTTON,
 ]
 
 
 # https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: IntegrationBlueprintConfigEntry,
+    entry: HanbdConfigEntry,
 ) -> bool:
     """Set up this integration using UI."""
-    coordinator = BlueprintDataUpdateCoordinator(
+    coordinator = HanbdDataUpdateCoordinator(
         hass=hass,
         logger=LOGGER,
         name=DOMAIN,
         update_interval=timedelta(hours=1),
     )
-    entry.runtime_data = IntegrationBlueprintData(
-        client=IntegrationBlueprintApiClient(
-            username=entry.data[CONF_USERNAME],
+    session = aiohttp.ClientSession(
+        connector=aiohttp.TCPConnector(resolver=aiohttp.ThreadedResolver())
+    )
+    entry.runtime_data = HanbdData(
+        client=HanbdApiClient(
+            phone=entry.data[CONF_PHONE],
             password=entry.data[CONF_PASSWORD],
-            session=async_get_clientsession(hass),
+            session=session,
         ),
         integration=async_get_loaded_integration(hass, entry.domain),
         coordinator=coordinator,
@@ -64,15 +68,18 @@ async def async_setup_entry(
 
 async def async_unload_entry(
     hass: HomeAssistant,
-    entry: IntegrationBlueprintConfigEntry,
+    entry: HanbdConfigEntry,
 ) -> bool:
     """Handle removal of an entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unloaded:
+        await entry.runtime_data.client.async_close()
+    return unloaded
 
 
 async def async_reload_entry(
     hass: HomeAssistant,
-    entry: IntegrationBlueprintConfigEntry,
+    entry: HanbdConfigEntry,
 ) -> None:
     """Reload config entry."""
     await hass.config_entries.async_reload(entry.entry_id)

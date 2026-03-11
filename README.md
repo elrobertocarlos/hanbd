@@ -1,46 +1,91 @@
-# Notice
+# HANBD Home Assistant Integration
 
-The component and platforms in this repository are not meant to be used by a
-user, but as a "blueprint" that custom component developers can build
-upon, to make more awesome stuff.
+Custom integration for HANBD smart litter boxes.
 
-HAVE FUN! 😎
+This integration connects to the HANBD cloud API and exposes your device data and controls in Home Assistant.
 
-## Why?
+## Features
 
-This is simple, by having custom_components look (README + structure) the same
-it is easier for developers to help each other and for users to start using them.
+- Config flow setup from UI (phone + password)
+- Cloud polling integration (`iot_class: cloud_polling`)
+- Device entities created per HANBD device
+- Button control:
+  - `Clean` button (`CLEAN` operation)
+- Sensors:
+  - Status (`activeStateName`)
+  - Firmware version
+  - Waste box level (`number1`)
+  - Litter level (`number2`)
+  - Uses today (`number3`)
+  - Cat weight (`number4`)
+  - Number 5 (`number5`)
+  - Number 6 (`number6`)
+- Binary sensors:
+  - Online
+  - Roller Full
+- Busy-state handling for clean command with user-friendly Home Assistant error message
 
-If you are a developer and you want to add things to this "blueprint" that you think more
-developers will have use for, please open a PR to add it :)
+## Requirements
 
-## What?
+- Home Assistant `2025.2.4` or newer
+- HACS `2.0.5` or newer
 
-This repository contains multiple files, here is a overview:
+## Installation
 
-File | Purpose | Documentation
--- | -- | --
-`.devcontainer.json` | Used for development/testing with Visual Studio Code. | [Documentation](https://code.visualstudio.com/docs/remote/containers)
-`.github/ISSUE_TEMPLATE/*.yml` | Templates for the issue tracker | [Documentation](https://help.github.com/en/github/building-a-strong-community/configuring-issue-templates-for-your-repository)
-`custom_components/integration_blueprint/*` | Integration files, this is where everything happens. | [Documentation](https://developers.home-assistant.io/docs/creating_component_index)
-`CONTRIBUTING.md` | Guidelines on how to contribute. | [Documentation](https://help.github.com/en/github/building-a-strong-community/setting-guidelines-for-repository-contributors)
-`LICENSE` | The license file for the project. | [Documentation](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/licensing-a-repository)
-`README.md` | The file you are reading now, should contain info about the integration, installation and configuration instructions. | [Documentation](https://help.github.com/en/github/writing-on-github/basic-writing-and-formatting-syntax)
-`requirements.txt` | Python packages used for development/lint/testing this integration. | [Documentation](https://pip.pypa.io/en/stable/user_guide/#requirements-files)
+### HACS (recommended)
 
-## How?
+1. Open HACS.
+2. Add this repository as a custom repository:
+   - URL: `https://github.com/elrobertocarlos/hanbd`
+   - Category: `Integration`
+3. Install `hanbd`.
+4. Restart Home Assistant.
 
-1. Create a new repository in GitHub, using this repository as a template by clicking the "Use this template" button in the GitHub UI.
-1. Open your new repository in Visual Studio Code devcontainer (Preferably with the "`Dev Containers: Clone Repository in Named Container Volume...`" option).
-1. Rename all instances of the `integration_blueprint` to `custom_components/<your_integration_domain>` (e.g. `custom_components/awesome_integration`).
-1. Rename all instances of the `Integration Blueprint` to `<Your Integration Name>` (e.g. `Awesome Integration`).
-1. Run the `scripts/develop` to start HA and test out your new integration.
+### Manual
 
-## Next steps
+1. Copy `custom_components/hanbd` into your Home Assistant `custom_components` directory.
+2. Restart Home Assistant.
 
-These are some next steps you may want to look into:
-- Add tests to your integration, [`pytest-homeassistant-custom-component`](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component) can help you get started.
-- Add brand images (logo/icon) to https://github.com/home-assistant/brands.
-- Create your first release.
-- Share your integration on the [Home Assistant Forum](https://community.home-assistant.io/).
-- Submit your integration to [HACS](https://hacs.xyz/docs/publish/start).
+## Configuration
+
+1. Go to Settings > Devices & Services.
+2. Click Add Integration.
+3. Search for `hanbd`.
+4. Enter your HANBD account phone number and password.
+
+## Notes on Updates and Polling
+
+The official app appears to use regular HTTP polling (`/member/device/list` and `/member/device/get`) rather than a push channel.
+
+This integration currently uses a coordinator update interval of 1 hour and also refreshes after operations. If you need faster updates, this can be tuned in a future update.
+
+## Known Limitations
+
+- Quiet Mode switch does not yet send on/off commands because the exact control payload/endpoint mapping is still being finalized.
+- Some numeric sensor fields (`number5`, `number6`) are currently unknown labels and may be renamed when their semantics are confirmed.
+
+## Development
+
+Useful scripts:
+
+- `scripts/setup` - Prepare dev environment
+- `scripts/lint` - Lint project
+- `scripts/develop` - Start local Home Assistant development flow
+
+## Troubleshooting
+
+- Authentication fails:
+  - Verify phone number and password.
+  - Confirm account can log in via official app.
+- Device appears busy when pressing Clean:
+  - The device may already be cleaning or in another active operation. Wait and retry.
+- No entities shown:
+  - Reconfigure integration and check Home Assistant logs for `custom_components.hanbd`.
+
+## Disclaimer
+
+This is an unofficial integration and is not affiliated with HANBD.
+
+## License
+
+See `LICENSE`.

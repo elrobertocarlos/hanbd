@@ -1,0 +1,39 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Enter your HANBD account credentials to connect your cat litter box devices.",
+                "data": {
+                    "phone": "Phone Number",
+                    "password": "Password"
+                }
+            },
+            "reauth_confirm": {
+                "title": "Reconnect HANBD account",
+                "description": "Your stored HANBD credentials are no longer valid. Enter updated credentials to reconnect this account.",
+                "data": {
+                    "phone": "Phone Number",
+                    "password": "Password"
+                }
+            },
+            "reconfigure": {
+                "title": "Reconfigure HANBD account",
+                "description": "Update the credentials for this HANBD account.",
+                "data": {
+                    "phone": "Phone Number",
+                    "password": "Password"
+                }
+            }
+        },
+        "error": {
+            "auth": "Phone number or password is incorrect.",
+            "connection": "Unable to connect to the HANBD server.",
+            "unknown": "Unknown error occurred."
+        },
+        "abort": {
+            "already_configured": "This account is already configured.",
+            "reauth_successful": "HANBD account reconnected successfully.",
+            "reconfigure_successful": "HANBD account updated successfully."
+        }
+    }
+}
